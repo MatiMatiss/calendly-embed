@@ -22,24 +22,60 @@
 
         // Function to inject Account ID into the form
         function injectAccountId(accountId) {
-            var intervalId = setInterval(function() {
-                var iframe = document.querySelector('.calendly-inline-widget iframe');
-                if (iframe) {
-                    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    var inputField = innerDoc.querySelector('input[name="account_id"]');
-                    if (inputField) {
-                        inputField.value = accountId;
-                        clearInterval(intervalId);
-                    }
+            var iframe = document.querySelector('.calendly-inline-widget iframe');
+            if (iframe) {
+                var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                var inputField = innerDoc.querySelector('input[name="account_id"]');
+                if (inputField) {
+                    inputField.value = accountId;
+                    console.log("Account ID injected: ", accountId);
+                } else {
+                    console.log("Input field not found.");
                 }
-            }, 500);
+            } else {
+                console.log("Iframe not found.");
+            }
+        }
+
+        // MutationObserver to detect changes in the iframe's content
+        function observeIframe(accountId) {
+            var iframe = document.querySelector('.calendly-inline-widget iframe');
+            if (iframe) {
+                var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                var observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList' || mutation.type === 'subtree') {
+                            injectAccountId(accountId);
+                        }
+                    });
+                });
+
+                observer.observe(innerDoc, {
+                    childList: true,
+                    subtree: true
+                });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function () {
             var accountId = getUrlParameter('account_id');
             if (accountId) {
+                var calendlyWidget = document.getElementById('calendly-widget');
+                if (calendlyWidget) {
+                    var calendlyUrl = calendlyWidget.getAttribute('data-url');
+                    calendlyUrl += '?account_id=' + accountId;
+                    calendlyWidget.setAttribute('data-url', calendlyUrl);
+                }
+
                 console.log("Account ID found: ", accountId);
-                injectAccountId(accountId);
+
+                // Wait for the iframe to load and then start observing
+                var iframe = document.querySelector('.calendly-inline-widget iframe');
+                if (iframe) {
+                    iframe.onload = function() {
+                        observeIframe(accountId);
+                    };
+                }
             } else {
                 console.log("No Account ID found in URL");
             }
