@@ -23,22 +23,25 @@
         document.addEventListener('DOMContentLoaded', function () {
             var accountId = getUrlParameter('account_id');
             if (accountId) {
-                var iframe = document.querySelector('.calendly-inline-widget iframe');
-                if (iframe) {
-                    iframe.onload = function () {
-                        iframe.contentWindow.postMessage({type: 'setAccountID', account_id: accountId}, '*');
-                    };
+                var calendlyWidget = document.querySelector('.calendly-inline-widget');
+                if (calendlyWidget) {
+                    var calendlyUrl = calendlyWidget.getAttribute('data-url');
+                    calendlyUrl += '?account_id=' + accountId;
+                    calendlyWidget.setAttribute('data-url', calendlyUrl);
                 }
+
+                console.log("Account ID found: ", accountId);
+            } else {
+                console.log("No Account ID found in URL");
             }
         });
 
+        // Listen for messages from the Calendly iframe
         window.addEventListener('message', function (e) {
-            if (e.data.type === 'setAccountID') {
-                var accountId = e.data.account_id;
-                var inputField = document.querySelector('input[name="Account ID"]'); // Adjust the selector based on the actual form structure
-                if (inputField) {
-                    inputField.value = accountId;
-                }
+            if (e.data.event === 'calendly.event_scheduled') {
+                var accountId = getUrlParameter('account_id');
+                console.log("Event scheduled with Account ID: ", accountId);
+                // Here you can handle any additional logic needed to capture the account_id
             }
         }, false);
     </script>
