@@ -7,7 +7,7 @@
 </head>
 <body>
     <!-- Calendly inline widget begin -->
-    <div class="calendly-inline-widget" data-url="https://calendly.com/matiss-lacis-heise/qbr-test" style="min-width:320px;height:700px;"></div>
+    <div class="calendly-inline-widget" id="calendly-widget" data-url="https://calendly.com/matiss-lacis-heise/qbr-test" style="min-width:320px;height:700px;"></div>
     <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
     <!-- Calendly inline widget end -->
 
@@ -24,7 +24,7 @@
             var accountId = getUrlParameter('account_id');
             if (accountId) {
                 // Adjust the Calendly widget URL to include the account_id parameter
-                var calendlyWidget = document.querySelector('.calendly-inline-widget');
+                var calendlyWidget = document.getElementById('calendly-widget');
                 if (calendlyWidget) {
                     var calendlyUrl = calendlyWidget.getAttribute('data-url');
                     calendlyUrl += '?account_id=' + accountId;
