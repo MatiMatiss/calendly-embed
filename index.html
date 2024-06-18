@@ -1,37 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendly Embed</title>
+    <title>Calendly Integration</title>
 </head>
 <body>
-    <div id="calendly-container" style="min-width:320px;height:700px;"></div>
-    <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
+    <div id="schedule_form">
+        <div class="calendly-inline-widget" data-url="https://calendly.com/matiss-lacis-heise/qbr-test" style="min-width:320px;height:630px;"></div>
+        <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js"></script>
+    </div>
+
     <script>
-        // Function to get URL parameter
         function getUrlParameter(name) {
             name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
             var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
             var results = regex.exec(location.search);
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-        }
+        };
 
         document.addEventListener('DOMContentLoaded', function () {
             var accountId = getUrlParameter('account_id');
             if (accountId) {
-                var calendlyUrl = "https://calendly.com/matiss-lacis-heise/qbr-test?account_id=" + accountId;
-                var calendlyContainer = document.getElementById('calendly-container');
-                calendlyContainer.innerHTML = '<div class="calendly-inline-widget" data-url="' + calendlyUrl + '" style="min-width:320px;height:700px;"></div>';
-                Calendly.initInlineWidget({
-                    url: calendlyUrl,
-                    parentElement: calendlyContainer
-                });
-                console.log("Calendly URL set with account ID: ", calendlyUrl);
-            } else {
-                console.log("No Account ID found in URL");
+                var iframe = document.querySelector('.calendly-inline-widget iframe');
+                if (iframe) {
+                    iframe.onload = function () {
+                        iframe.contentWindow.postMessage({type: 'setAccountID', account_id: accountId}, '*');
+                    };
+                }
             }
         });
+
+        window.addEventListener('message', function (e) {
+            if (e.data.type === 'setAccountID') {
+                var accountId = e.data.account_id;
+                var inputField = document.querySelector('input[name="Account ID"]'); // Adjust the selector based on the actual form structure
+                if (inputField) {
+                    inputField.value = accountId;
+                }
+            }
+        }, false);
     </script>
 </body>
 </html>
