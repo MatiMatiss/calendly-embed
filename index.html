@@ -24,17 +24,23 @@
         function injectAccountId(accountId) {
             var iframe = document.querySelector('.calendly-inline-widget iframe');
             if (iframe) {
-                var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-                var inputField = innerDoc.querySelector('input[name="account_id"]');
-                if (inputField) {
-                    inputField.value = accountId;
-                    console.log("Account ID injected: ", accountId);
-                } else {
-                    console.log("Input field not found.");
+                try {
+                    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    var inputField = innerDoc.querySelector('input[name="account_id"]');
+                    if (inputField) {
+                        inputField.value = accountId;
+                        console.log("Account ID injected: ", accountId);
+                        return true;  // Successfully injected
+                    } else {
+                        console.log("Input field not found.");
+                    }
+                } catch (e) {
+                    console.log("Error accessing iframe content: ", e);
                 }
             } else {
                 console.log("Iframe not found.");
             }
+            return false;  // Injection not successful
         }
 
         // MutationObserver to detect changes in the iframe's content
@@ -45,7 +51,9 @@
                 var observer = new MutationObserver(function(mutations) {
                     mutations.forEach(function(mutation) {
                         console.log("Mutation observed: ", mutation);
-                        injectAccountId(accountId);
+                        if (injectAccountId(accountId)) {
+                            observer.disconnect();  // Stop observing once injected
+                        }
                     });
                 });
 
@@ -58,18 +66,27 @@
 
         // Retry function to ensure iframe is found
         function waitForIframe(accountId) {
-            var iframe = document.querySelector('.calendly-inline-widget iframe');
-            if (iframe) {
-                iframe.onload = function() {
-                    observeIframe(accountId);
-                };
-                observeIframe(accountId);  // Call it immediately in case iframe is already loaded
-            } else {
-                console.log("Retrying to find the iframe...");
-                setTimeout(function() {
-                    waitForIframe(accountId);
-                }, 500);  // Retry every 500ms
-            }
+            var attempts = 0;
+            var maxAttempts = 10;
+            var intervalId = setInterval(function() {
+                var iframe = document.querySelector('.calendly-inline-widget iframe');
+                if (iframe) {
+                    console.log("Iframe found.");
+                    iframe.onload = function() {
+                        console.log("Iframe loaded.");
+                        observeIframe(accountId);
+                    };
+                    observeIframe(accountId);  // Call it immediately in case iframe is already loaded
+                    clearInterval(intervalId);
+                } else {
+                    attempts++;
+                    console.log("Retrying to find the iframe... attempt ", attempts);
+                    if (attempts >= maxAttempts) {
+                        clearInterval(intervalId);
+                        console.log("Max attempts reached. Could not find iframe.");
+                    }
+                }
+            }, 1000);  // Retry every 1000ms
         }
 
         document.addEventListener('DOMContentLoaded', function () {
