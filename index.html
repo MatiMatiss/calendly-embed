@@ -41,22 +41,34 @@
         function observeIframe(accountId) {
             var iframe = document.querySelector('.calendly-inline-widget iframe');
             if (iframe) {
-                iframe.onload = function() {
-                    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-                    var observer = new MutationObserver(function(mutations) {
-                        mutations.forEach(function(mutation) {
-                            console.log("Mutation observed: ", mutation);
-                            injectAccountId(accountId);
-                        });
+                var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                var observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        console.log("Mutation observed: ", mutation);
+                        injectAccountId(accountId);
                     });
+                });
 
-                    observer.observe(innerDoc, {
-                        childList: true,
-                        subtree: true
-                    });
+                observer.observe(innerDoc, {
+                    childList: true,
+                    subtree: true
+                });
+            }
+        }
+
+        // Retry function to ensure iframe is found
+        function waitForIframe(accountId) {
+            var iframe = document.querySelector('.calendly-inline-widget iframe');
+            if (iframe) {
+                iframe.onload = function() {
+                    observeIframe(accountId);
                 };
+                observeIframe(accountId);  // Call it immediately in case iframe is already loaded
             } else {
-                console.log("Iframe not found on initial load.");
+                console.log("Retrying to find the iframe...");
+                setTimeout(function() {
+                    waitForIframe(accountId);
+                }, 500);  // Retry every 500ms
             }
         }
 
@@ -72,8 +84,8 @@
 
                 console.log("Account ID found: ", accountId);
 
-                // Observe changes in the iframe to inject the Account ID
-                observeIframe(accountId);
+                // Wait for the iframe to load and then start observing
+                waitForIframe(accountId);
             } else {
                 console.log("No Account ID found in URL");
             }
