@@ -20,18 +20,26 @@
             return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
         };
 
+        // Function to inject Account ID into the form
+        function injectAccountId(accountId) {
+            var intervalId = setInterval(function() {
+                var iframe = document.querySelector('.calendly-inline-widget iframe');
+                if (iframe) {
+                    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    var inputField = innerDoc.querySelector('input[name="account_id"]');
+                    if (inputField) {
+                        inputField.value = accountId;
+                        clearInterval(intervalId);
+                    }
+                }
+            }, 500);
+        }
+
         document.addEventListener('DOMContentLoaded', function () {
             var accountId = getUrlParameter('account_id');
             if (accountId) {
-                // Adjust the Calendly widget URL to include the account_id parameter
-                var calendlyWidget = document.getElementById('calendly-widget');
-                if (calendlyWidget) {
-                    var calendlyUrl = calendlyWidget.getAttribute('data-url');
-                    calendlyUrl += '?account_id=' + accountId;
-                    calendlyWidget.setAttribute('data-url', calendlyUrl);
-                }
-
                 console.log("Account ID found: ", accountId);
+                injectAccountId(accountId);
             } else {
                 console.log("No Account ID found in URL");
             }
