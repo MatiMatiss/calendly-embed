@@ -6,9 +6,32 @@
     <title>Calendly Embed</title>
 </head>
 <body>
-    <!-- Calendly inline widget begin -->
-    <div class="calendly-inline-widget" data-url="https://calendly.com/matiss-lacis-heise/qbr-test?account_id=0015r00000vKTqCAAW" style="min-width:320px;height:700px;"></div>
+    <div id="calendly-container" style="min-width:320px;height:700px;"></div>
     <script type="text/javascript" src="https://assets.calendly.com/assets/external/widget.js" async></script>
-    <!-- Calendly inline widget end -->
+    <script>
+        // Function to get URL parameter
+        function getUrlParameter(name) {
+            name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+            var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+            var results = regex.exec(location.search);
+            return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var accountId = getUrlParameter('account_id');
+            if (accountId) {
+                var calendlyUrl = "https://calendly.com/matiss-lacis-heise/qbr-test?account_id=" + accountId;
+                var calendlyContainer = document.getElementById('calendly-container');
+                calendlyContainer.innerHTML = '<div class="calendly-inline-widget" data-url="' + calendlyUrl + '" style="min-width:320px;height:700px;"></div>';
+                Calendly.initInlineWidget({
+                    url: calendlyUrl,
+                    parentElement: calendlyContainer
+                });
+                console.log("Calendly URL set with account ID: ", calendlyUrl);
+            } else {
+                console.log("No Account ID found in URL");
+            }
+        });
+    </script>
 </body>
 </html>
