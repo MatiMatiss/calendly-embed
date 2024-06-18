@@ -41,19 +41,22 @@
         function observeIframe(accountId) {
             var iframe = document.querySelector('.calendly-inline-widget iframe');
             if (iframe) {
-                var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
-                var observer = new MutationObserver(function(mutations) {
-                    mutations.forEach(function(mutation) {
-                        if (mutation.type === 'childList' || mutation.type === 'subtree') {
+                iframe.onload = function() {
+                    var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    var observer = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+                            console.log("Mutation observed: ", mutation);
                             injectAccountId(accountId);
-                        }
+                        });
                     });
-                });
 
-                observer.observe(innerDoc, {
-                    childList: true,
-                    subtree: true
-                });
+                    observer.observe(innerDoc, {
+                        childList: true,
+                        subtree: true
+                    });
+                };
+            } else {
+                console.log("Iframe not found on initial load.");
             }
         }
 
@@ -69,13 +72,8 @@
 
                 console.log("Account ID found: ", accountId);
 
-                // Wait for the iframe to load and then start observing
-                var iframe = document.querySelector('.calendly-inline-widget iframe');
-                if (iframe) {
-                    iframe.onload = function() {
-                        observeIframe(accountId);
-                    };
-                }
+                // Observe changes in the iframe to inject the Account ID
+                observeIframe(accountId);
             } else {
                 console.log("No Account ID found in URL");
             }
